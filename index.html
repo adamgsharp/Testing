@@ -3,683 +3,973 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYT Bestseller Recommender</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Family Tree</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
-            color: #f0f0f0;
+            font-family: 'Open Sans', sans-serif;
+            background: #eae4d8;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
-        header {
-            width: 100%;
-            padding: 22px 40px;
-            border-bottom: 1px solid #1e1e1e;
+        /* ── Control bar ── */
+        #controls {
+            background: #fff;
+            border-bottom: 2px solid #c8a96a;
+            padding: 10px 20px;
             display: flex;
             align-items: center;
-            justify-content: center;
-        }
-
-        .logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 1rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #ccc;
-        }
-
-        .logo span {
-            color: #e63946;
-        }
-
-        main {
-            flex: 1;
-            width: 100%;
-            max-width: 860px;
-            padding: 64px 24px 48px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .hero {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(2.2rem, 5vw, 3.6rem);
-            line-height: 1.2;
-            color: #fff;
-            margin-bottom: 18px;
-        }
-
-        h1 em {
-            font-style: italic;
-            color: #e63946;
-        }
-
-        .subtitle {
-            color: #777;
-            font-size: 1rem;
-            font-weight: 300;
-            max-width: 420px;
-            margin: 0 auto 36px;
-            line-height: 1.65;
-        }
-
-        .btn-main {
-            background: #e63946;
-            color: #fff;
-            border: none;
-            padding: 15px 44px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-            border-radius: 4px;
-        }
-
-        .btn-main:hover {
-            background: #c1121f;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(230, 57, 70, 0.35);
-        }
-
-        .btn-main:active {
-            transform: translateY(0);
-            box-shadow: none;
-        }
-
-        /* Book Card */
-        .book-card {
-            width: 100%;
-            background: #111;
-            border: 1px solid #1e1e1e;
-            border-radius: 8px;
-            padding: 40px;
-            display: none;
-        }
-
-        .book-card.visible {
-            display: flex;
-            gap: 40px;
-            animation: fadeUp 0.45s ease forwards;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(18px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .book-cover {
-            flex-shrink: 0;
-            width: 155px;
-        }
-
-        .book-cover img {
-            width: 155px;
-            height: 232px;
-            object-fit: cover;
-            border-radius: 3px;
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
-            display: block;
-        }
-
-        .cover-placeholder {
-            width: 155px;
-            height: 232px;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 3px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            color: #444;
-            font-size: 0.75rem;
-            text-align: center;
-            padding: 12px;
-            line-height: 1.4;
-        }
-
-        .book-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .book-meta {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            padding: 4px 10px;
-            border-radius: 3px;
-        }
-
-        .badge-nyt {
-            background: #1a1a1a;
-            color: #888;
-            border: 1px solid #2a2a2a;
-        }
-
-        .badge-category {
-            color: #e63946;
-            background: rgba(230, 57, 70, 0.1);
-            border: 1px solid rgba(230, 57, 70, 0.2);
-        }
-
-        .badge-year {
-            color: #666;
-            background: #111;
-            border: 1px solid #222;
-        }
-
-        .book-title {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(1.4rem, 3vw, 1.9rem);
-            color: #fff;
-            line-height: 1.25;
-            margin-bottom: 10px;
-        }
-
-        .book-author {
-            font-size: 0.95rem;
-            color: #888;
-            margin-bottom: 22px;
-        }
-
-        .divider {
-            height: 1px;
-            background: #1e1e1e;
-            margin-bottom: 20px;
-        }
-
-        .book-description {
-            font-size: 0.92rem;
-            color: #999;
-            line-height: 1.75;
-            margin-bottom: 28px;
-        }
-
-        .book-actions {
-            display: flex;
             gap: 12px;
-            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,.12);
         }
 
-        .btn-amazon {
-            background: #e63946;
-            color: #fff;
+        #controls-title {
+            font-family: 'Lora', serif;
+            font-size: 18px;
+            color: #3d2b1f;
+            white-space: nowrap;
+        }
+
+        #tree-name-input {
+            border: 1.5px solid #c8a96a;
+            border-radius: 5px;
+            padding: 6px 10px;
+            font-family: 'Lora', serif;
+            font-size: 15px;
+            color: #3d2b1f;
+            width: 190px;
+            background: #fffdf8;
+        }
+        #tree-name-input:focus { outline: none; border-color: #5a8a3b; }
+
+        .spacer { flex: 1; }
+
+        .btn {
+            padding: 7px 14px;
             border: none;
-            padding: 10px 22px;
-            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 13px;
             font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: background 0.2s;
-            border-radius: 4px;
-            text-decoration: none;
-            display: inline-block;
+            transition: background 0.15s, transform 0.1s;
+            white-space: nowrap;
         }
+        .btn:active { transform: scale(.97); }
+        .btn-green  { background: #5a8a3b; color: #fff; }
+        .btn-green:hover { background: #4a7a2b; }
+        .btn-brown  { background: #8a6030; color: #fff; }
+        .btn-brown:hover { background: #7a5020; }
+        .btn-dark   { background: #3d2b1f; color: #fff; }
+        .btn-dark:hover { background: #2d1b0f; }
+        .btn-cancel { background: #e0d5c0; color: #3d2b1f; }
+        .btn-cancel:hover { background: #d0c5b0; }
+        .btn-danger { background: #c0392b; color: #fff; }
+        .btn-danger:hover { background: #a93226; }
 
-        .btn-amazon:hover {
-            background: #c1121f;
-        }
-
-        .btn-another {
-            background: transparent;
-            color: #ccc;
-            border: 1px solid #2a2a2a;
-            padding: 10px 22px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-            border-radius: 4px;
-        }
-
-        .btn-another:hover {
-            border-color: #444;
-            background: #1a1a1a;
-        }
-
-        footer {
+        /* ── Tree wrapper ── */
+        #tree-wrapper {
             padding: 24px;
-            text-align: center;
-            color: #333;
-            font-size: 0.78rem;
-            border-top: 1px solid #141414;
-            width: 100%;
-            margin-top: auto;
+            display: flex;
+            justify-content: center;
         }
 
-        @media (max-width: 580px) {
-            main {
-                padding: 48px 16px 32px;
-            }
+        #tree-container {
+            background: #ffffff;
+            width: 816px;
+            min-height: 1056px;
+            position: relative;
+            box-shadow: 0 6px 30px rgba(0,0,0,.2);
+            overflow: visible;
+        }
 
-            .book-card.visible {
-                flex-direction: column;
-                align-items: center;
-                padding: 28px 20px;
-                gap: 28px;
-            }
+        #tree-svg {
+            display: block;
+            width: 816px;
+        }
 
-            .book-cover {
-                width: 140px;
-            }
+        /* ── Empty state ── */
+        #empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #b09878;
+            pointer-events: none;
+        }
+        #empty-state h2 {
+            font-family: 'Lora', serif;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        #empty-state p { font-size: 14px; }
 
-            .book-cover img,
-            .cover-placeholder {
-                width: 140px;
-                height: 210px;
-            }
+        /* ── Modals ── */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop.open { display: flex; }
 
-            .book-info {
-                width: 100%;
+        .modal {
+            background: #fff;
+            border-radius: 12px;
+            padding: 28px;
+            width: 420px;
+            max-width: 94vw;
+            box-shadow: 0 10px 50px rgba(0,0,0,.3);
+        }
+        .modal h2 {
+            font-family: 'Lora', serif;
+            color: #3d2b1f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0e8d8;
+        }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #6a5040;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            border: 1.5px solid #d0c0a0;
+            border-radius: 6px;
+            padding: 8px 11px;
+            font-size: 14px;
+            color: #3d2b1f;
+            font-family: 'Open Sans', sans-serif;
+            background: #fffdf8;
+        }
+        .form-group input:focus,
+        .form-group select:focus { outline: none; border-color: #5a8a3b; }
+
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 22px;
+        }
+
+        /* ── Context menu ── */
+        #context-menu {
+            position: fixed;
+            background: #fff;
+            border: 1px solid #d0c0a0;
+            border-radius: 8px;
+            padding: 5px 0;
+            box-shadow: 0 4px 18px rgba(0,0,0,.16);
+            z-index: 300;
+            display: none;
+            min-width: 150px;
+        }
+        #context-menu.open { display: block; }
+        .ctx-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #3d2b1f;
+        }
+        .ctx-item:hover { background: #f5f0e8; }
+        .ctx-item.danger { color: #c0392b; }
+
+        /* ── Legend ── */
+        #legend {
+            display: flex;
+            gap: 16px;
+            padding: 8px 20px;
+            font-size: 12px;
+            color: #8a7060;
+            background: #f8f4ec;
+            border-top: 1px solid #e0d5c0;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 2px; }
+
+        /* ── Print ── */
+        @media print {
+            @page { size: letter portrait; margin: 0.4in; }
+            body { background: white !important; }
+            #controls, #legend { display: none !important; }
+            #tree-wrapper { padding: 0 !important; display: block !important; }
+            #tree-container {
+                width: 100% !important;
+                box-shadow: none !important;
+                min-height: auto !important;
             }
+            #tree-svg { width: 100% !important; }
+            .modal-backdrop, #context-menu { display: none !important; }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">NYT <span>Bestseller</span> Recommender</div>
-    </header>
 
-    <main>
-        <div class="hero">
-            <h1>Discover Your Next<br><em>Great Read</em></h1>
-            <p class="subtitle">Get a random pick from New York Times bestselling books of the last five years.</p>
-            <button class="btn-main" onclick="recommend()">Recommend a Book</button>
+<!-- ── Controls ── -->
+<div id="controls">
+    <span id="controls-title">Family Tree</span>
+    <input id="tree-name-input" type="text" placeholder="Enter family name…" oninput="updateTreeName(this.value)">
+    <div class="spacer"></div>
+    <button class="btn btn-green"  onclick="openAddPersonModal()">+ Add Person</button>
+    <button class="btn btn-brown"  onclick="openAddRelationshipModal()">+ Add Relationship</button>
+    <button class="btn btn-dark"   onclick="window.print()">Print</button>
+</div>
+
+<!-- ── Tree canvas ── -->
+<div id="tree-wrapper">
+    <div id="tree-container">
+        <svg id="tree-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div id="empty-state">
+            <h2>Your Family Tree</h2>
+            <p>Click <strong>+ Add Person</strong> to get started</p>
         </div>
+    </div>
+</div>
 
-        <div class="book-card" id="bookCard">
-            <div class="book-cover">
-                <img id="coverImg" src="" alt="Book cover" onerror="showPlaceholder()">
-                <div class="cover-placeholder" id="coverPlaceholder">Cover not available</div>
+<!-- ── Legend ── -->
+<div id="legend">
+    <span class="legend-item"><span class="legend-dot" style="background:#b0c8f0;border:1.5px solid #6a90c8;"></span> Male</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#f5c8dc;border:1.5px solid #c87090;"></span> Female</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#faf6f0;border:1.5px solid #c8a96a;"></span> Unspecified</span>
+    <span style="margin-left:8px;">Click a card to edit &nbsp;|&nbsp; Right-click to delete</span>
+</div>
+
+<!-- ── Add / Edit Person Modal ── -->
+<div class="modal-backdrop" id="add-person-modal">
+    <div class="modal">
+        <h2 id="person-modal-title">Add Person</h2>
+        <div class="form-group">
+            <label>Full Name *</label>
+            <input id="p-name" type="text" placeholder="e.g. Jane Marie Smith">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Birth Year</label>
+                <input id="p-birth" type="number" placeholder="e.g. 1942" min="1" max="2099">
             </div>
-            <div class="book-info">
-                <div class="book-meta">
-                    <span class="badge badge-nyt">&#9733; NYT Bestseller</span>
-                    <span class="badge badge-category" id="badgeCategory"></span>
-                    <span class="badge badge-year" id="badgeYear"></span>
-                </div>
-                <h2 class="book-title" id="bookTitle"></h2>
-                <div class="book-author" id="bookAuthor"></div>
-                <div class="divider"></div>
-                <p class="book-description" id="bookDescription"></p>
-                <div class="book-actions">
-                    <a id="amazonLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-amazon">Find on Amazon</a>
-                    <button class="btn-another" onclick="recommend()">Try Another &rarr;</button>
-                </div>
+            <div class="form-group">
+                <label>Death Year</label>
+                <input id="p-death" type="number" placeholder="leave blank if living" min="1" max="2099">
             </div>
         </div>
-    </main>
+        <div class="form-group">
+            <label>Gender</label>
+            <select id="p-gender">
+                <option value="">Prefer not to say / other</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Notes (optional)</label>
+            <input id="p-notes" type="text" placeholder="e.g. Hometown, occupation…">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn btn-cancel" onclick="closeModals()">Cancel</button>
+            <button class="btn btn-green" onclick="savePerson()">Save</button>
+        </div>
+    </div>
+</div>
 
-    <footer>Books drawn from the New York Times Bestseller lists &bull; 2021&ndash;2026</footer>
+<!-- ── Add Relationship Modal ── -->
+<div class="modal-backdrop" id="add-rel-modal">
+    <div class="modal">
+        <h2>Add Relationship</h2>
+        <div class="form-group">
+            <label>Type</label>
+            <select id="r-type" onchange="onRelTypeChange()">
+                <option value="spouse">Spouse / Partner</option>
+                <option value="parent">Parent &rarr; Child</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label id="r-label1">Person 1</label>
+            <select id="r-p1"></select>
+        </div>
+        <div class="form-group">
+            <label id="r-label2">Person 2</label>
+            <select id="r-p2"></select>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn btn-cancel" onclick="closeModals()">Cancel</button>
+            <button class="btn btn-brown" onclick="saveRelationship()">Add</button>
+        </div>
+    </div>
+</div>
 
-    <script>
-        const books = [
-            // FICTION
-            {
-                title: "The Four Winds",
-                author: "Kristin Hannah",
-                year: 2021,
-                category: "Fiction",
-                isbn: "9781250178602",
-                description: "From the author of The Nightingale comes a powerful American epic set during the Great Depression — a story of love, survival, and the resilience of the human spirit when a mother is forced to choose between saving herself and saving her children."
-            },
-            {
-                title: "Project Hail Mary",
-                author: "Andy Weir",
-                year: 2021,
-                category: "Fiction",
-                isbn: "9780593135204",
-                description: "A lone astronaut wakes up millions of miles from home with no memory of how he got there. He must piece together the truth — and save Earth from an extinction-level threat — before it's too late."
-            },
-            {
-                title: "Klara and the Sun",
-                author: "Kazuo Ishiguro",
-                year: 2021,
-                category: "Fiction",
-                isbn: "9780593311295",
-                description: "An Artificial Friend named Klara observes humans from a store window, hoping to be chosen. A luminous novel from the Nobel laureate about what it means to love — and what it means to be human."
-            },
-            {
-                title: "Malibu Rising",
-                author: "Taylor Jenkins Reid",
-                year: 2021,
-                category: "Fiction",
-                isbn: "9781250764799",
-                description: "Four famous siblings host a legendary end-of-summer party at their Malibu beach house. Over one wild night, secrets unravel and lives are changed forever."
-            },
-            {
-                title: "The Midnight Library",
-                author: "Matt Haig",
-                year: 2021,
-                category: "Fiction",
-                isbn: "9780525559474",
-                description: "Between life and death there is a library where every book is a different life you could have lived. Nora Seed must decide which life is truly worth living."
-            },
-            {
-                title: "Apples Never Fall",
-                author: "Liane Moriarty",
-                year: 2021,
-                category: "Fiction",
-                isbn: "9781250220790",
-                description: "The Delaney family seems perfect — a retired tennis-coaching couple, four grown children. Then their mother disappears. Which one of them could have done it?"
-            },
-            {
-                title: "The Judge's List",
-                author: "John Grisham",
-                year: 2021,
-                category: "Fiction",
-                isbn: "9780385547642",
-                description: "A complaint investigator for a federal judicial oversight board secretly investigates a sitting federal judge she suspects of murder — a race against time and power."
-            },
-            {
-                title: "Tomorrow, and Tomorrow, and Tomorrow",
-                author: "Gabrielle Zevin",
-                year: 2022,
-                category: "Fiction",
-                isbn: "9780593321201",
-                description: "A sweeping novel about friendship, creativity, and love set against the world of video game design — spanning three decades and exploring what it means to build something that matters."
-            },
-            {
-                title: "Lessons in Chemistry",
-                author: "Bonnie Garmus",
-                year: 2022,
-                category: "Fiction",
-                isbn: "9780385547345",
-                description: "A female chemist in 1960s California becomes an unlikely TV cooking show star. Her no-nonsense approach to science inspires a nation of housewives to think of themselves as so much more."
-            },
-            {
-                title: "Demon Copperhead",
-                author: "Barbara Kingsolver",
-                year: 2022,
-                category: "Fiction",
-                isbn: "9780063141292",
-                description: "A Pulitzer Prize–winning retelling of David Copperfield set in Appalachia, following a boy born to poverty in the opioid era — a devastating, compassionate portrait of America left behind."
-            },
-            {
-                title: "Book Lovers",
-                author: "Emily Henry",
-                year: 2022,
-                category: "Fiction",
-                isbn: "9780593334836",
-                description: "A cutthroat literary agent and a book editor keep crossing paths in a small North Carolina town. A witty, heartfelt rom-com for people who love books and the complicated people obsessed with them."
-            },
-            {
-                title: "Babel",
-                author: "R.F. Kuang",
-                year: 2022,
-                category: "Fiction",
-                isbn: "9780063021426",
-                description: "A dark academic fantasy set in 1830s Oxford, where magic is powered by the untranslatable gaps between languages — and a brilliant student must choose between his adopted country and his conscience."
-            },
-            {
-                title: "Fairy Tale",
-                author: "Stephen King",
-                year: 2022,
-                category: "Fiction",
-                isbn: "9781668002179",
-                description: "A teenage boy inherits an old shed — and a key to a parallel world where the remnants of good and evil are locked in a timeless battle. A masterful return to epic fantasy from the king of horror."
-            },
-            {
-                title: "The Covenant of Water",
-                author: "Abraham Verghese",
-                year: 2023,
-                category: "Fiction",
-                isbn: "9780802162175",
-                description: "Spanning three generations of a family in South India, this epic novel traces an inherited condition, the doctors who try to help them, and the mystery of love that flows through time like water."
-            },
-            {
-                title: "Happy Place",
-                author: "Emily Henry",
-                year: 2023,
-                category: "Fiction",
-                isbn: "9780593441282",
-                description: "Two people who secretly broke up months ago must pretend to still be together at their annual friend group reunion. Trapped in their shared happy place, the lines between pretend and real begin to blur."
-            },
-            {
-                title: "Fourth Wing",
-                author: "Rebecca Yarros",
-                year: 2023,
-                category: "Fiction",
-                isbn: "9781649374042",
-                description: "At a war college where dragons choose their riders, a young woman expected to fail finds herself drawn to the most dangerous man on campus — and to an extraordinary dragon no one else could bond with."
-            },
-            {
-                title: "Yellowface",
-                author: "R.F. Kuang",
-                year: 2023,
-                category: "Fiction",
-                isbn: "9780063250833",
-                description: "After her Chinese American friend dies in a freak accident, a white author steals her unpublished manuscript and publishes it as her own. A razor-sharp satire of race, privilege, and the publishing industry."
-            },
-            {
-                title: "Holly",
-                author: "Stephen King",
-                year: 2023,
-                category: "Fiction",
-                isbn: "9781668016060",
-                description: "Holly Gibney — one of Stephen King's most beloved characters — returns for her most dangerous and personal case yet, a chilling standalone thriller of dark obsession and unlikely heroism."
-            },
-            {
-                title: "The Women",
-                author: "Kristin Hannah",
-                year: 2024,
-                category: "Fiction",
-                isbn: "9780312577230",
-                description: "A young nurse follows her brother to serve in Vietnam, only to discover that the true battle begins when she comes home — an unforgettable story of women who were warriors and what America owed them."
-            },
-            {
-                title: "James",
-                author: "Percival Everett",
-                year: 2024,
-                category: "Fiction",
-                isbn: "9780385550369",
-                description: "A Pulitzer Prize–winning reimagining of Adventures of Huckleberry Finn told from the perspective of the enslaved Jim — a powerful, funny, and deeply moving reinvention of an American classic."
-            },
-            {
-                title: "Intermezzo",
-                author: "Sally Rooney",
-                year: 2024,
-                category: "Fiction",
-                isbn: "9780374610647",
-                description: "Two grieving brothers navigate love, loss, and complicated relationships in the year following their father's death — from the author of Normal People, in her most ambitious novel yet."
-            },
-            {
-                title: "Funny Story",
-                author: "Emily Henry",
-                year: 2024,
-                category: "Fiction",
-                isbn: "9780593441275",
-                description: "Two strangers, both recently left by their partners for each other, end up as unlikely roommates. What starts as commiseration becomes something neither of them expected."
-            },
-            {
-                title: "Orbital",
-                author: "Samantha Harvey",
-                year: 2024,
-                category: "Fiction",
-                isbn: "9780802164230",
-                description: "A Booker Prize–winning novel set aboard the International Space Station over a single day, as six astronauts orbit Earth sixteen times and contemplate the fragile, astonishing beauty of the world below."
-            },
-            // NONFICTION
-            {
-                title: "The Body Keeps the Score",
-                author: "Bessel van der Kolk",
-                year: 2021,
-                category: "Nonfiction",
-                isbn: "9780143127741",
-                description: "A pioneering researcher transforms our understanding of trauma and its treatment, revealing how it reshapes body, brain, and mind — and what innovative new treatments offer hope for recovery."
-            },
-            {
-                title: "Atomic Habits",
-                author: "James Clear",
-                year: 2021,
-                category: "Nonfiction",
-                isbn: "9780735211292",
-                description: "A practical guide to building good habits and breaking bad ones. The tiny changes that seem to make no difference add up to the remarkable results that distinguish successful people."
-            },
-            {
-                title: "Will",
-                author: "Will Smith",
-                year: 2021,
-                category: "Nonfiction",
-                isbn: "9781984877789",
-                description: "Will Smith opens up about his life and career with uncommon depth and honesty — sharing the lessons, personal struggles, and extraordinary adventures accumulated over a lifetime in entertainment."
-            },
-            {
-                title: "The Storyteller",
-                author: "Dave Grohl",
-                year: 2021,
-                category: "Nonfiction",
-                isbn: "9781797113401",
-                description: "The Foo Fighters frontman and Nirvana drummer shares remarkable true tales from a life lived at the intersection of music, magic, and the joyous chaos of rock and roll."
-            },
-            {
-                title: "I'm Glad My Mom Died",
-                author: "Jennette McCurdy",
-                year: 2022,
-                category: "Nonfiction",
-                isbn: "9781982185824",
-                description: "The former iCarly star's raw, darkly funny memoir about her complicated relationship with her mother, her struggle with eating disorders, and her journey toward independence and healing."
-            },
-            {
-                title: "The Light We Carry",
-                author: "Michelle Obama",
-                year: 2022,
-                category: "Nonfiction",
-                isbn: "9780593237465",
-                description: "The former First Lady shares personal tools and practices she has developed to navigate uncertainty — an intimate look at how she stays grounded, purposeful, and hopeful in turbulent times."
-            },
-            {
-                title: "Finding Me",
-                author: "Viola Davis",
-                year: 2022,
-                category: "Nonfiction",
-                isbn: "9780063037328",
-                description: "A deeply personal memoir from the acclaimed actress and producer, tracing her extraordinary journey from profound poverty in Rhode Island to the heights of Hollywood and Broadway."
-            },
-            {
-                title: "Spare",
-                author: "Prince Harry, The Duke of Sussex",
-                year: 2023,
-                category: "Nonfiction",
-                isbn: "9780593593806",
-                description: "A raw, unflinching memoir from Prince Harry — from his turbulent childhood in the Royal Family to his marriage and the dramatic decision to step back from royal duties and forge a new life."
-            },
-            {
-                title: "Outlive",
-                author: "Peter Attia, MD",
-                year: 2023,
-                category: "Nonfiction",
-                isbn: "9780593236598",
-                description: "A groundbreaking guide to living better and longer — a leading physician lays out a bold new science of longevity, challenging conventional medicine with practical strategies for a healthier life."
-            },
-            {
-                title: "The Wager",
-                author: "David Grann",
-                year: 2023,
-                category: "Nonfiction",
-                isbn: "9780385534260",
-                description: "In 1741, a British naval ship wrecked on a desolate island off Patagonia. What happened next — mutiny, survival, and a harrowing homecoming — became one of history's most gripping tales of adventure and justice."
-            },
-            {
-                title: "Poverty, by America",
-                author: "Matthew Desmond",
-                year: 2023,
-                category: "Nonfiction",
-                isbn: "9780593239919",
-                description: "The Pulitzer Prize–winning sociologist argues that America has the resources to eliminate poverty — and that the real question is why we choose not to. A bracing, urgent call to moral action."
-            },
-            {
-                title: "Say Nothing",
-                author: "Patrick Radden Keefe",
-                year: 2024,
-                category: "Nonfiction",
-                isbn: "9780385521437",
-                description: "A gripping account of the Troubles in Northern Ireland, centered on the unsolved murder of Jean McConville and the lives consumed by violence, ideology, and the long aftermath of a brutal conflict."
-            }
-        ];
+<!-- ── Context Menu ── -->
+<div id="context-menu">
+    <div class="ctx-item" id="ctx-edit">Edit Person</div>
+    <div class="ctx-item danger" id="ctx-delete">Delete Person</div>
+</div>
 
-        let lastIndex = -1;
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let state = { treeName: '', people: [], relationships: [] };
+let editingId = null;
+let ctxId = null;
 
-        function showPlaceholder() {
-            document.getElementById('coverImg').style.display = 'none';
-            document.getElementById('coverPlaceholder').style.display = 'flex';
+// ═══════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════
+function persist() { localStorage.setItem('ft2', JSON.stringify(state)); }
+
+function loadSaved() {
+    try {
+        const s = localStorage.getItem('ft2');
+        if (s) {
+            state = JSON.parse(s);
+            document.getElementById('tree-name-input').value = state.treeName || '';
+        }
+    } catch(e) {}
+}
+
+function updateTreeName(v) { state.treeName = v; persist(); render(); }
+
+// ═══════════════════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════════════════
+function closeModals() {
+    document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('open'));
+    editingId = null;
+    ['p-name','p-birth','p-death','p-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-gender').value = '';
+}
+
+function openAddPersonModal() {
+    editingId = null;
+    document.getElementById('person-modal-title').textContent = 'Add Person';
+    document.getElementById('add-person-modal').classList.add('open');
+    setTimeout(() => document.getElementById('p-name').focus(), 50);
+}
+
+function openEditPersonModal(id) {
+    const p = state.people.find(x => x.id === id);
+    if (!p) return;
+    editingId = id;
+    document.getElementById('person-modal-title').textContent = 'Edit Person';
+    document.getElementById('p-name').value  = p.name  || '';
+    document.getElementById('p-birth').value = p.birth || '';
+    document.getElementById('p-death').value = p.death || '';
+    document.getElementById('p-gender').value = p.gender || '';
+    document.getElementById('p-notes').value  = p.notes || '';
+    document.getElementById('add-person-modal').classList.add('open');
+    setTimeout(() => document.getElementById('p-name').focus(), 50);
+}
+
+function openAddRelationshipModal() {
+    if (state.people.length < 2) { alert('Add at least two people first.'); return; }
+    fillPersonSelects();
+    onRelTypeChange();
+    document.getElementById('add-rel-modal').classList.add('open');
+}
+
+function fillPersonSelects() {
+    const sorted = [...state.people].sort((a,b) => a.name.localeCompare(b.name));
+    const opts = sorted.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    document.getElementById('r-p1').innerHTML = opts;
+    document.getElementById('r-p2').innerHTML = opts;
+    // default second select to second person
+    if (sorted.length >= 2) document.getElementById('r-p2').value = sorted[1].id;
+}
+
+function onRelTypeChange() {
+    const t = document.getElementById('r-type').value;
+    document.getElementById('r-label1').textContent = t === 'spouse' ? 'Partner 1'  : 'Parent';
+    document.getElementById('r-label2').textContent = t === 'spouse' ? 'Partner 2'  : 'Child';
+}
+
+// ═══════════════════════════════════════════════════════
+// CRUD
+// ═══════════════════════════════════════════════════════
+function savePerson() {
+    const name = document.getElementById('p-name').value.trim();
+    if (!name) { alert('Name is required.'); return; }
+    const data = {
+        name,
+        birth:  document.getElementById('p-birth').value.trim(),
+        death:  document.getElementById('p-death').value.trim(),
+        gender: document.getElementById('p-gender').value,
+        notes:  document.getElementById('p-notes').value.trim(),
+    };
+    if (editingId) {
+        Object.assign(state.people.find(p => p.id === editingId), data);
+    } else {
+        state.people.push({ id: 'p' + Date.now(), ...data });
+    }
+    persist(); closeModals(); render();
+}
+
+function saveRelationship() {
+    const type = document.getElementById('r-type').value;
+    const from = document.getElementById('r-p1').value;
+    const to   = document.getElementById('r-p2').value;
+    if (from === to) { alert('Please choose two different people.'); return; }
+    const dup = state.relationships.some(r =>
+        r.type === type && ((r.from === from && r.to === to) || (r.from === to && r.to === from))
+    );
+    if (dup) { alert('That relationship already exists.'); return; }
+    state.relationships.push({ id: 'r' + Date.now(), type, from, to });
+    persist(); closeModals(); render();
+}
+
+function deletePerson(id) {
+    if (!confirm('Remove this person and all their relationships?')) return;
+    state.people        = state.people.filter(p => p.id !== id);
+    state.relationships = state.relationships.filter(r => r.from !== id && r.to !== id);
+    persist(); render();
+}
+
+// ═══════════════════════════════════════════════════════
+// LAYOUT
+// ═══════════════════════════════════════════════════════
+const CW = 128, CH = 62, CGAP = 44, HGAP = 18, VGAP = 88;
+
+function buildMaps() {
+    const spouseOf    = new Map();  // id -> partnerId
+    const childrenOf  = new Map();  // parentId -> Set<childId>
+    const parentsOf   = new Map();  // childId  -> Set<parentId>
+
+    for (const r of state.relationships) {
+        if (r.type === 'spouse') {
+            if (!spouseOf.has(r.from)) spouseOf.set(r.from, r.to);
+            if (!spouseOf.has(r.to))   spouseOf.set(r.to, r.from);
+        } else {
+            if (!childrenOf.has(r.from)) childrenOf.set(r.from, new Set());
+            childrenOf.get(r.from).add(r.to);
+            if (!parentsOf.has(r.to)) parentsOf.set(r.to, new Set());
+            parentsOf.get(r.to).add(r.from);
+        }
+    }
+    return { spouseOf, childrenOf, parentsOf };
+}
+
+function coupleKids(unit, childrenOf) {
+    const s = new Set();
+    for (const id of unit) for (const cid of (childrenOf.get(id) || [])) s.add(cid);
+    return [...s];
+}
+
+function unitWidth(unit, spouseOf, childrenOf, memo = new Map()) {
+    const key = unit.join(',');
+    if (memo.has(key)) return memo.get(key);
+
+    const selfW = unit.length === 2 ? CW * 2 + CGAP + HGAP : CW + HGAP;
+    const kids  = coupleKids(unit, childrenOf);
+
+    let kidW = 0;
+    const seen = new Set();
+    for (const cid of kids) {
+        if (seen.has(cid)) continue;
+        const cu = getUnit(cid, spouseOf);
+        cu.forEach(x => seen.add(x));
+        kidW += unitWidth(cu, spouseOf, childrenOf, memo);
+    }
+
+    const result = Math.max(selfW, kidW);
+    memo.set(key, result);
+    return result;
+}
+
+function getUnit(id, spouseOf) {
+    const s = spouseOf.get(id);
+    return s ? [id, s] : [id];
+}
+
+function computeLayout() {
+    const positions = new Map();
+    const { spouseOf, childrenOf, parentsOf } = buildMaps();
+    const memo = new Map();
+    const laid = new Set();
+
+    function placeUnit(unit, cx, y) {
+        if (unit.some(x => laid.has(x))) return;
+        unit.forEach(x => laid.add(x));
+
+        if (unit.length === 2) {
+            positions.set(unit[0], { x: cx - CGAP/2 - CW, y, w: CW, h: CH });
+            positions.set(unit[1], { x: cx + CGAP/2,       y, w: CW, h: CH });
+        } else {
+            positions.set(unit[0], { x: cx - CW/2, y, w: CW, h: CH });
         }
 
-        function recommend() {
-            let idx;
-            do {
-                idx = Math.floor(Math.random() * books.length);
-            } while (idx === lastIndex && books.length > 1);
-            lastIndex = idx;
+        const kids = coupleKids(unit, childrenOf);
+        if (!kids.length) return;
 
-            const book = books[idx];
-            const card = document.getElementById('bookCard');
-
-            // Reset animation by removing/re-adding class
-            card.classList.remove('visible');
-            void card.offsetWidth;
-
-            // Fill in content
-            document.getElementById('badgeCategory').textContent = book.category;
-            document.getElementById('badgeYear').textContent = book.year;
-            document.getElementById('bookTitle').textContent = book.title;
-            document.getElementById('bookAuthor').textContent = 'by ' + book.author;
-            document.getElementById('bookDescription').textContent = book.description;
-
-            // Cover image from Open Library
-            const img = document.getElementById('coverImg');
-            const placeholder = document.getElementById('coverPlaceholder');
-            img.style.display = 'block';
-            placeholder.style.display = 'none';
-            img.src = 'https://covers.openlibrary.org/b/isbn/' + book.isbn + '-L.jpg';
-
-            // Amazon search link
-            document.getElementById('amazonLink').href =
-                'https://www.amazon.com/s?k=' + encodeURIComponent(book.title + ' ' + book.author);
-
-            // Show card
-            card.classList.add('visible');
-
-            // Smooth scroll into view
-            setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+        const totalW = unitWidth(unit, spouseOf, childrenOf, memo);
+        let lx = cx - totalW / 2;
+        const seen = new Set();
+        for (const cid of kids) {
+            if (seen.has(cid)) continue;
+            const cu = getUnit(cid, spouseOf);
+            cu.forEach(x => seen.add(x));
+            const w = unitWidth(cu, spouseOf, childrenOf, memo);
+            placeUnit(cu, lx + w / 2, y + CH + VGAP);
+            lx += w;
         }
-    </script>
+    }
+
+    // Root units = people with no parents
+    const roots = state.people
+        .filter(p => !parentsOf.has(p.id) || !parentsOf.get(p.id).size)
+        .map(p => p.id);
+    const rootUnits = [];
+    const seenR = new Set();
+    for (const id of roots) {
+        if (seenR.has(id)) continue;
+        seenR.add(id);
+        const u = getUnit(id, spouseOf);
+        u.forEach(x => seenR.add(x));
+        rootUnits.push(u);
+    }
+
+    const totalRootW = rootUnits.reduce((s, u) => s + unitWidth(u, spouseOf, childrenOf, memo), 0);
+    const SVG_CX = 408;
+    let lx = SVG_CX - totalRootW / 2;
+    for (const u of rootUnits) {
+        const w = unitWidth(u, spouseOf, childrenOf, memo);
+        placeUnit(u, lx + w / 2, 80);
+        lx += w;
+    }
+
+    // Place any disconnected people
+    let ox = 60, oy = 80;
+    for (const p of state.people) {
+        if (!positions.has(p.id)) {
+            positions.set(p.id, { x: ox, y: oy, w: CW, h: CH });
+            ox += CW + HGAP;
+            if (ox > 620) { ox = 60; oy += CH + VGAP; }
+        }
+    }
+
+    return { positions, spouseOf, childrenOf, parentsOf };
+}
+
+// ═══════════════════════════════════════════════════════
+// SVG HELPERS
+// ═══════════════════════════════════════════════════════
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs = {}) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+    return e;
+}
+function text(content, attrs = {}) {
+    const t = el('text', attrs);
+    t.textContent = content;
+    return t;
+}
+
+// ═══════════════════════════════════════════════════════
+// VINE DECORATION (one corner, mirrored for others)
+// ═══════════════════════════════════════════════════════
+function vineCornerGroup(transform) {
+    const g = el('g', { transform, opacity: '0.82' });
+
+    // Main branch
+    g.appendChild(el('path', {
+        d: 'M 5 108 C 22 92, 38 68, 58 46 C 78 24, 98 10, 112 4',
+        stroke: '#6a9450', fill: 'none', 'stroke-width': '2.4', 'stroke-linecap': 'round'
+    }));
+    // Side branch A
+    g.appendChild(el('path', {
+        d: 'M 32 72 C 24 56, 14 42, 18 26',
+        stroke: '#6a9450', fill: 'none', 'stroke-width': '1.6', 'stroke-linecap': 'round'
+    }));
+    // Side branch B
+    g.appendChild(el('path', {
+        d: 'M 66 44 C 72 28, 62 14, 72 4',
+        stroke: '#6a9450', fill: 'none', 'stroke-width': '1.6', 'stroke-linecap': 'round'
+    }));
+    // Tendril A
+    g.appendChild(el('path', {
+        d: 'M 45 58 C 52 50, 48 40, 54 34',
+        stroke: '#6a9450', fill: 'none', 'stroke-width': '1', 'stroke-linecap': 'round', opacity: '0.6'
+    }));
+    // Tendril B
+    g.appendChild(el('path', {
+        d: 'M 15 85 C 8 78, 10 66, 6 60',
+        stroke: '#6a9450', fill: 'none', 'stroke-width': '1', 'stroke-linecap': 'round', opacity: '0.6'
+    }));
+
+    // Leaves
+    const leaves = [
+        { cx: 56, cy: 46, rx: 11, ry: 5.5, rot: -45, fill: '#a0c878' },
+        { cx: 86, cy: 22, rx: 10, ry: 5,   rot: -32, fill: '#88b860' },
+        { cx: 17, cy: 26, rx: 9,  ry: 4.5, rot: -68, fill: '#a0c878' },
+        { cx: 26, cy: 37, rx: 8,  ry: 4,   rot: -40, fill: '#c0d898' },
+        { cx: 72, cy: 4,  rx: 9,  ry: 4.5, rot:  22, fill: '#88b860' },
+        { cx: 63, cy: 15, rx: 8,  ry: 4,   rot:  52, fill: '#a0c878' },
+        { cx: 54, cy: 34, rx: 7,  ry: 3.5, rot: -20, fill: '#c0d898' },
+    ];
+    for (const l of leaves) {
+        g.appendChild(el('ellipse', {
+            cx: l.cx, cy: l.cy, rx: l.rx, ry: l.ry,
+            fill: l.fill,
+            transform: `rotate(${l.rot} ${l.cx} ${l.cy})`
+        }));
+    }
+    // Berry dots
+    for (const [bx, by] of [[112,4],[5,108],[95,3]]) {
+        g.appendChild(el('circle', { cx: bx, cy: by, r: '2.5', fill: '#c8a060', opacity: '0.7' }));
+    }
+
+    return g;
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function render() {
+    const svg        = document.getElementById('tree-svg');
+    const emptyState = document.getElementById('empty-state');
+
+    svg.innerHTML = '';
+
+    if (!state.people.length) {
+        svg.setAttribute('viewBox', '0 0 816 1056');
+        svg.style.height = '1056px';
+        document.getElementById('tree-container').style.minHeight = '1056px';
+        drawShell(svg, 1056);
+        emptyState.style.display = 'block';
+        return;
+    }
+    emptyState.style.display = 'none';
+
+    const { positions, spouseOf, childrenOf } = computeLayout();
+
+    let maxY = 0;
+    for (const p of positions.values()) maxY = Math.max(maxY, p.y + p.h);
+    const svgH = Math.max(1056, maxY + 100);
+
+    svg.setAttribute('viewBox', `0 0 816 ${svgH}`);
+    svg.style.height = svgH + 'px';
+    document.getElementById('tree-container').style.minHeight = svgH + 'px';
+
+    drawShell(svg, svgH);
+    drawConnections(svg, positions, spouseOf, childrenOf);
+    for (const p of state.people) {
+        const pos = positions.get(p.id);
+        if (pos) drawCard(svg, p, pos);
+    }
+}
+
+function drawShell(svg, svgH) {
+    // Defs
+    const defs = el('defs');
+    defs.innerHTML = `
+        <filter id="cs" x="-8%" y="-8%" width="118%" height="118%">
+            <feDropShadow dx="1" dy="2" stdDeviation="2.5" flood-color="#00000018"/>
+        </filter>
+        <filter id="ts" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#00000020"/>
+        </filter>
+    `;
+    svg.appendChild(defs);
+
+    // Page border
+    svg.appendChild(el('rect', {
+        x: '10', y: '10', width: '796', height: svgH - 20,
+        rx: '4', fill: 'none', stroke: '#d4b878', 'stroke-width': '1.5'
+    }));
+    svg.appendChild(el('rect', {
+        x: '14', y: '14', width: '788', height: svgH - 28,
+        rx: '3', fill: 'none', stroke: '#e8d4a0', 'stroke-width': '0.7'
+    }));
+
+    // Vine corners (top-left, top-right, bottom-left, bottom-right)
+    svg.appendChild(vineCornerGroup('translate(0,0)'));
+    svg.appendChild(vineCornerGroup(`translate(816,0) scale(-1,1)`));
+    svg.appendChild(vineCornerGroup(`translate(0,${svgH}) scale(1,-1)`));
+    svg.appendChild(vineCornerGroup(`translate(816,${svgH}) scale(-1,-1)`));
+
+    // Title
+    const titleName = state.treeName || 'Family Tree';
+    const titleGroup = el('g');
+
+    // Decorative line left
+    titleGroup.appendChild(el('line', {
+        x1: '55', y1: '38', x2: '200', y2: '38',
+        stroke: '#c8a060', 'stroke-width': '1.2'
+    }));
+    // Decorative line right
+    titleGroup.appendChild(el('line', {
+        x1: '616', y1: '38', x2: '761', y2: '38',
+        stroke: '#c8a060', 'stroke-width': '1.2'
+    }));
+    // Small diamond
+    titleGroup.appendChild(el('polygon', {
+        points: '408,30 413,36 408,42 403,36',
+        fill: '#c8a060', opacity: '0.6'
+    }));
+    // Title text shadow
+    const tShadow = text(titleName, {
+        x: '409', y: '45', 'text-anchor': 'middle',
+        'font-family': 'Lora, Georgia, serif', 'font-size': '22',
+        'font-weight': '600', fill: '#c8a060', opacity: '0.3', filter: 'url(#ts)'
+    });
+    const tMain = text(titleName, {
+        x: '408', y: '44', 'text-anchor': 'middle',
+        'font-family': 'Lora, Georgia, serif', 'font-size': '22',
+        'font-weight': '600', fill: '#3d2b1f'
+    });
+    titleGroup.appendChild(tShadow);
+    titleGroup.appendChild(tMain);
+    svg.appendChild(titleGroup);
+}
+
+function drawConnections(svg, positions, spouseOf, childrenOf) {
+    const g = el('g');
+    const drawnSpouses  = new Set();
+    const drawnParents  = new Set();
+
+    // Spouse lines
+    for (const p of state.people) {
+        const sid = spouseOf.get(p.id);
+        if (!sid) continue;
+        const key = [p.id, sid].sort().join('~');
+        if (drawnSpouses.has(key)) continue;
+        drawnSpouses.add(key);
+
+        const pa = positions.get(p.id), pb = positions.get(sid);
+        if (!pa || !pb) continue;
+
+        const lx = Math.min(pa.x + pa.w, pb.x + pb.w);
+        const rx = Math.max(pa.x, pb.x);
+        const y  = (Math.min(pa.y, pb.y) + CH / 2);
+
+        g.appendChild(el('line', {
+            x1: lx, y1: y, x2: rx, y2: y,
+            stroke: '#c8a060', 'stroke-width': '1.8', 'stroke-dasharray': '5 3'
+        }));
+        // Heart
+        const hx = (lx + rx) / 2;
+        const ht = text('♥', {
+            x: hx, y: y + 5, 'text-anchor': 'middle',
+            'font-size': '12', fill: '#c07878'
+        });
+        g.appendChild(ht);
+    }
+
+    // Parent-child connector groups
+    for (const p of state.people) {
+        const kids = childrenOf.get(p.id);
+        if (!kids || !kids.size) continue;
+        if (drawnParents.has(p.id)) continue;
+
+        const sid = spouseOf.get(p.id);
+        drawnParents.add(p.id);
+        if (sid) drawnParents.add(sid);
+
+        const allKids = new Set([...kids]);
+        if (sid) (childrenOf.get(sid) || []).forEach(c => allKids.add(c));
+
+        const pa  = positions.get(p.id);
+        const pb  = sid ? positions.get(sid) : null;
+        if (!pa) continue;
+
+        const parentMidX = pb
+            ? (pa.x + pa.w/2 + pb.x + pb.w/2) / 2
+            : pa.x + pa.w/2;
+        const parentBotY = Math.max(pa.y, pb ? pb.y : pa.y) + CH;
+
+        const kidIds  = [...allKids].filter(c => positions.has(c));
+        if (!kidIds.length) continue;
+
+        const kidMidXs = kidIds.map(c => positions.get(c).x + CW/2);
+        const kidTopY  = positions.get(kidIds[0]).y;
+        const barY     = parentBotY + VGAP * 0.45;
+
+        // Vertical from parent to bar
+        g.appendChild(el('line', {
+            x1: parentMidX, y1: parentBotY, x2: parentMidX, y2: barY,
+            stroke: '#8a6030', 'stroke-width': '1.8', 'stroke-linecap': 'round'
+        }));
+
+        if (kidIds.length > 1) {
+            const minX = Math.min(...kidMidXs), maxX = Math.max(...kidMidXs);
+            g.appendChild(el('line', {
+                x1: minX, y1: barY, x2: maxX, y2: barY,
+                stroke: '#8a6030', 'stroke-width': '1.8', 'stroke-linecap': 'round'
+            }));
+        }
+
+        for (const cid of kidIds) {
+            const cmx = positions.get(cid).x + CW/2;
+            g.appendChild(el('line', {
+                x1: cmx, y1: barY, x2: cmx, y2: kidTopY,
+                stroke: '#8a6030', 'stroke-width': '1.8', 'stroke-linecap': 'round'
+            }));
+            // Small node dot at bar
+            g.appendChild(el('circle', { cx: cmx, cy: barY, r: '3', fill: '#8a6030' }));
+        }
+    }
+
+    svg.appendChild(g);
+}
+
+function drawCard(svg, person, pos) {
+    const g = el('g', { 'data-id': person.id });
+    g.style.cursor = 'pointer';
+
+    const palette = {
+        male:   { bg: '#ddeafc', border: '#6a8ec8', hdr: '#5a7eb8', text: '#1a3060' },
+        female: { bg: '#fce8f0', border: '#c87090', hdr: '#b86080', text: '#60102a' },
+        '':     { bg: '#faf6f0', border: '#c8a060', hdr: '#b89050', text: '#3d2b1f' },
+    };
+    const c = palette[person.gender] || palette[''];
+
+    // Shadow
+    g.appendChild(el('rect', {
+        x: pos.x + 2, y: pos.y + 3, width: pos.w, height: pos.h,
+        rx: '8', fill: '#00000012'
+    }));
+    // Card body
+    g.appendChild(el('rect', {
+        x: pos.x, y: pos.y, width: pos.w, height: pos.h,
+        rx: '8', fill: c.bg, stroke: c.border, 'stroke-width': '1.5',
+        filter: 'url(#cs)'
+    }));
+    // Header band
+    g.appendChild(el('rect', {
+        x: pos.x, y: pos.y, width: pos.w, height: '20',
+        rx: '8', fill: c.hdr
+    }));
+    g.appendChild(el('rect', {
+        x: pos.x, y: pos.y + 12, width: pos.w, height: '8',
+        fill: c.hdr
+    }));
+
+    // Name (split into two lines if long)
+    const words = person.name.split(' ');
+    let line1 = '', line2 = '';
+    if (person.name.length <= 16) {
+        line1 = person.name;
+    } else {
+        const mid = Math.ceil(words.length / 2);
+        line1 = words.slice(0, mid).join(' ');
+        line2 = words.slice(mid).join(' ');
+    }
+    line1 = trunc(line1, 17);
+    line2 = trunc(line2, 17);
+
+    if (line2) {
+        g.appendChild(text(line1, {
+            x: pos.x + pos.w/2, y: pos.y + 12,
+            'text-anchor': 'middle', 'font-family': 'Lora, Georgia, serif',
+            'font-size': '9.5', 'font-weight': '600', fill: '#fff'
+        }));
+        g.appendChild(text(line2, {
+            x: pos.x + pos.w/2, y: pos.y + 22,
+            'text-anchor': 'middle', 'font-family': 'Lora, Georgia, serif',
+            'font-size': '9', fill: '#fff'
+        }));
+    } else {
+        g.appendChild(text(line1, {
+            x: pos.x + pos.w/2, y: pos.y + 14,
+            'text-anchor': 'middle', 'font-family': 'Lora, Georgia, serif',
+            'font-size': '10.5', 'font-weight': '600', fill: '#fff'
+        }));
+    }
+
+    // Dates
+    const dateStr = fmtDates(person.birth, person.death);
+    if (dateStr) {
+        g.appendChild(text(dateStr, {
+            x: pos.x + pos.w/2, y: pos.y + 40,
+            'text-anchor': 'middle', 'font-family': 'Open Sans, Arial, sans-serif',
+            'font-size': '9.5', fill: c.text
+        }));
+    }
+
+    // Notes (small)
+    if (person.notes) {
+        g.appendChild(text(trunc(person.notes, 20), {
+            x: pos.x + pos.w/2, y: pos.y + 54,
+            'text-anchor': 'middle', 'font-family': 'Open Sans, Arial, sans-serif',
+            'font-size': '8', fill: c.text, opacity: '0.7', 'font-style': 'italic'
+        }));
+    }
+
+    // Click = edit, right-click = context menu
+    g.addEventListener('click', () => openEditPersonModal(person.id));
+    g.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        ctxId = person.id;
+        const menu = document.getElementById('context-menu');
+        menu.style.left = e.clientX + 'px';
+        menu.style.top  = e.clientY + 'px';
+        menu.classList.add('open');
+    });
+
+    svg.appendChild(g);
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function trunc(s, n) {
+    if (!s) return '';
+    return s.length <= n ? s : s.slice(0, n - 1) + '…';
+}
+
+function fmtDates(b, d) {
+    if (!b && !d) return '';
+    if (b && d) return `${b} – ${d}`;
+    if (b) return `b. ${b}`;
+    return `d. ${d}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOBAL EVENT HANDLERS
+// ═══════════════════════════════════════════════════════
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', e => { if (e.target === bd) closeModals(); });
+});
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModals(); }
+    if (e.key === 'Enter') {
+        if (document.getElementById('add-person-modal').classList.contains('open')) savePerson();
+        if (document.getElementById('add-rel-modal').classList.contains('open')) saveRelationship();
+    }
+});
+
+document.addEventListener('click', () => {
+    document.getElementById('context-menu').classList.remove('open');
+});
+
+document.getElementById('ctx-edit').onclick   = () => { openEditPersonModal(ctxId); };
+document.getElementById('ctx-delete').onclick = () => { deletePerson(ctxId); };
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
+loadSaved();
+render();
+</script>
 </body>
 </html>
